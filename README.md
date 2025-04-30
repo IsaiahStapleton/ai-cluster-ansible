@@ -19,10 +19,10 @@ The purpose of this repo is to be able to automate the installation and configur
 
 ## Workload Components that are Deployed
 
-***Minio S3 Storage:*** Provides object storage for your models. A randomized sername and password to minio instance is created, a data connection is set up in RHOAI, and a bucket is created.
-***AI Model - granite-3.1-2b-instruct-quantized:*** The AI Model that will be deployed. It is automatically uploaded into the bucket created in the minio setup.
-***vLLM ServingRuntime:*** Used as the ServingRuntime for the deployed Granite Model
-***llm-load-test-exporter:*** The purpose of this program is to run llm-load-test application and then serve the resulting metrics to a /metrics endpoint. This is used for running a benchmark against the deployed Granite model and serving the performance metrics for prometheus to collect 
+- ***Minio S3 Storage:*** Provides object storage for your models. A randomized sername and password to minio instance is created, a data connection is set up in RHOAI, and a bucket is created.
+- ***AI Model - granite-3.1-2b-instruct-quantized:*** The AI Model that will be deployed. It is automatically uploaded into the bucket created in the minio setup.
+- ***vLLM ServingRuntime:*** Used as the ServingRuntime for the deployed Granite Model
+- ***llm-load-test-exporter:*** The purpose of this program is to run llm-load-test application and then serve the resulting metrics to a /metrics endpoint. This is used for running a benchmark against the deployed Granite model and serving the performance metrics for prometheus to collect 
 
 
 ## How to Use
