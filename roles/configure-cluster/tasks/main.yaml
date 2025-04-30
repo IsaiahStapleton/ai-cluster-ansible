@@ -47,6 +47,12 @@
     definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/nfd/') }}"
     validate_certs: false
 
+- name: Configure Prometheus
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/prometheus/') }}"
+    validate_certs: false
+
 - name: Deploy Autopilot
   kubernetes.core.k8s:
     state: present
