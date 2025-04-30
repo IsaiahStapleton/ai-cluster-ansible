@@ -1,5 +1,5 @@
 ---
-- name: Uninstall everything
+- name: Uninstall Everything Setup with configure-cluster and deploy-workloads roles
   hosts: localhost
   connection: local
   gather_facts: false

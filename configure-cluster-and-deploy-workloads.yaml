@@ -1,5 +1,5 @@
 ---
-- name: Deploy everything
+- name: Configure AI Cluster and Deploy AI Workload Components
   hosts: localhost
   connection: local
   gather_facts: false
