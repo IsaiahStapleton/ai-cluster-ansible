@@ -1,0 +1,7 @@
+---
+- name: Uninstall everything
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - uninstall-cluster-components

@@ -17,7 +17,7 @@ readme: README.md
 # A list of the collection's content authors. Can be just the name or in the format 'Full Name <email> (url)
 # @nicks:irc/im.site#channel'
 authors:
-- your name <example@domain.com>
+- Isaiah Stapleton <istaplet@redhat.com>
 
 
 ### OPTIONAL but strongly recommended
@@ -44,7 +44,7 @@ tags: []
 dependencies: {}
 
 # The URL of the originating SCM repository
-repository: http://example.com/repository
+repository: https://github.com/IsaiahStapleton/ai-cluster-ansible.git
 
 # The URL to any online docs
 documentation: http://docs.example.com

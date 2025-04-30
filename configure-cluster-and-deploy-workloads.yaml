@@ -1,0 +1,7 @@
+---
+- name: Deploy everything
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - configure-cluster-and-deploy-workloads
