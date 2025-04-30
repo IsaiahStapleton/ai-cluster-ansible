@@ -56,9 +56,3 @@
     state: present
     definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/llm-load-test-exporter/') }}"
     validate_certs: false
-
-- name: Configure Prometheus
-  kubernetes.core.k8s:
-    state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/prometheus/') }}"
-    validate_certs: false
