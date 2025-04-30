@@ -104,3 +104,9 @@
     state: absent
     definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/prometheus/') }}"
     validate_certs: false
+
+- name: Uninstall Autopilot
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/autopilot/') }}"
+    validate_certs: false
