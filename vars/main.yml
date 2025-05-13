@@ -1,0 +1,2 @@
+---
+kustomize_dir: "{{ playbook_dir }}/../files" 

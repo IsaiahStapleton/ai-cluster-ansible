@@ -4,4 +4,5 @@
   connection: local
   gather_facts: false
   roles:
-    - configure-cluster
+    - uninstall_workloads
+    - uninstall_cluster_config

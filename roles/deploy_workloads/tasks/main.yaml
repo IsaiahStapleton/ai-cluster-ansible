@@ -1,8 +1,14 @@
 ---
+- name: Create Demo Namespace
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/demo-namespace/') }}"
+    validate_certs: false
+
 - name: Deploy Minio S3 Storage
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/minio/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/minio/') }}"
     validate_certs: false
 
 - name: Wait for Minio Jobs to Finish
@@ -19,7 +25,7 @@
 - name: Upload Granite Model
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/upload-model/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/upload-model/') }}"
     validate_certs: false
 
 - name: Wait for Granite Model to Finish Uploading
@@ -48,11 +54,11 @@
 - name: Deploy Granite Model and vLLM ServingRuntime
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/models/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/models/') }}"
     validate_certs: false
 
 - name: Deploy llm-load-test-exporter
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='files/feature/llm-load-test-exporter/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/llm-load-test-exporter/') }}"
     validate_certs: false

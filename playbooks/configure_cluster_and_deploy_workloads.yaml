@@ -4,4 +4,5 @@
   connection: local
   gather_facts: false
   roles:
-    - configure-cluster-and-deploy-workloads
+    - configure_cluster
+    - deploy_workloads 
