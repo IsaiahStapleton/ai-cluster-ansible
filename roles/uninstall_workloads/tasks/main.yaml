@@ -42,12 +42,6 @@
     definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/minio/') }}"
     validate_certs: false
 
-- name: Remove vLLM ServingRuntime
-  kubernetes.core.k8s:
-    state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/models/') }}"
-    validate_certs: false
-
 - name: Remove llm-load-test-exporter
   kubernetes.core.k8s:
     state: absent
