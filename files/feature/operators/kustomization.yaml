@@ -8,4 +8,4 @@ resources:
   - ../../bundles/servicemesh-operator
   - ../../bundles/authorino-operator
   - ../../bundles/autopilot
-  # - ../../bundles/opentelemetry
+  - ../../bundles/opentelemetry
