@@ -15,7 +15,7 @@ The purpose of this repo is to be able to automate the installation and configur
 - ***Red Hat OpenShift Serverless Operator:*** Provides Knative Serving for scalable and event-driven AI model deployment.
 - ***Red Hat Authorino Operator:*** Provides authentication and authorization for secure access to AI model endpoints.
 - ***Red Hat OpenShift AI Operator:*** Manages and deploys AI components and services within OpenShift.
-***IBM Autopilot:*** Provides health checks for your AI cluster.
+- ***IBM Autopilot:*** Provides health checks for your AI cluster.
 
 ## Workload Components that are Deployed
 
@@ -28,11 +28,13 @@ The purpose of this repo is to be able to automate the installation and configur
 ## How to Use
 
 There are different playbooks:
-- **configure-cluster-and-deploy-workloads:** Will install and deploy everything needed for doing model serving and running AI workloads in the cluster.
-
-- **uninstall-cluster-components:** Uninstalls everything that was installed and deployed in the configure-cluster-and-deploy-workloads playbook.
-- **configure-cluster:** Configures the cluster to be able to run AI workloads and deploy models.
-- **deploy-workloads:** Deploys the AI workloads, cluster must be configured to do so.
+- **configure_cluster_and_deploy_workloads**: Will install and deploy everything needed for doing model serving and running AI workloads in the cluster. Including deploying the workloads themselves.
+- **configure_cluster**: Configures the cluster to be able to run AI workloads and deploy models.
+- **deploy_workloads**: Deploys the AI workloads, cluster must be configured to do so.
+- **uninstall_config_and_workloads**: Uninstalls the ai cluster configuration and the ai workloads.
+- **uninstall_cluster_config**: Uninstalls the AI cluster configuration
+Uninstall_workloads: Uninstalls the ai workloads
+- **uninstall_workloads**: Uninstalls the ai workloads
 
 
 ### Prerequisites
