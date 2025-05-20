@@ -2,7 +2,7 @@
 - name: Install Operators
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/features/operators') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/operators') }}"
     validate_certs: false
 
 - name: Wait for NVIDIA GPU Operator to be ready
