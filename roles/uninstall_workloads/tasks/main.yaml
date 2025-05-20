@@ -39,13 +39,13 @@
 - name: Remove Minio S3 Storage
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/minio/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/minio/') }}"
     validate_certs: false
 
 - name: Remove llm-load-test-exporter
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/llm-load-test-exporter/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/llm-load-test-exporter/') }}"
     validate_certs: false
 
 - name: Remove all Minio Jobs

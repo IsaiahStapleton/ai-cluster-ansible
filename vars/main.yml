@@ -1,2 +1,2 @@
 ---
-kustomize_dir: "{{ playbook_dir }}/../files" 
+kustomize_dir="{{role_path}}/../../files”

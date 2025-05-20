@@ -2,19 +2,19 @@
 - name: Remove RHOAI CRDs
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/rhoai/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/rhoai/') }}"
     validate_certs: false
 
 - name: Remove NFD instance
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/nfd/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/nfd/') }}"
     validate_certs: false
 
 - name: Remove Operators
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/operators/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/operators/') }}"
     validate_certs: false
 
 - name: Remove ServiceMesh and Authorino CSVs
@@ -41,5 +41,5 @@
 - name: Disable User Workload Monitoring for Prometheus
   kubernetes.core.k8s:
     state: absent
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/prometheus/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/prometheus/') }}"
     validate_certs: false
