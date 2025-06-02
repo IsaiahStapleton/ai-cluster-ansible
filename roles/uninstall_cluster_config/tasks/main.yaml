@@ -55,3 +55,9 @@
     state: absent
     definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/observability/') }}"
     validate_certs: false
+
+- name: Remove OpenTelemetry Config
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/opentelemetry/') }}"
+    validate_certs: false

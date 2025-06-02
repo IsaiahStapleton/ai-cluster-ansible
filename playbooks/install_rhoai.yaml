@@ -1,0 +1,7 @@
+---
+- name: Uninstall RHOAI
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  roles:
+    - install_rhoai

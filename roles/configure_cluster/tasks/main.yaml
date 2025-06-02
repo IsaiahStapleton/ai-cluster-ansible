@@ -53,23 +53,35 @@
     definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/prometheus/') }}"
     validate_certs: false
 
-# - name: Wait for OpenTelemetry operator to be ready
-#   kubernetes.core.k8s_info:
-#     namespace: opentelemetry
-#     kind: Pod
-#     label_selectors:
-#       - app.kubernetes.io/name=opentelemetry-operator
-#     wait: true
-#     wait_timeout: 600
-#     wait_condition:
-#       type: Ready
-#       status: 'True'
+- name: Wait for OpenTelemetry operator to be ready
+  kubernetes.core.k8s_info:
+    namespace: opentelemetry
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/name=opentelemetry-operator
+    wait: true
+    wait_timeout: 600
+    wait_condition:
+      type: Ready
+      status: 'True'
 
-# - name: Configure OpenTelemetry
-#   kubernetes.core.k8s:
-#     state: present
-#     definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/opentelemetry/') }}"
-#     validate_certs: false
+- name: Wait for Tempo operator to be ready
+  kubernetes.core.k8s_info:
+    namespace: openshift-tempo-operator
+    kind: Pod
+    label_selectors:
+      - app.kubernetes.io/name=tempo-operator
+    wait: true
+    wait_timeout: 600
+    wait_condition:
+      type: Ready
+      status: 'True'
+
+- name: Configure OpenTelemetry
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/opentelemetry/') }}"
+    validate_certs: false
 
 - name: Setup Grafana
   kubernetes.core.k8s:

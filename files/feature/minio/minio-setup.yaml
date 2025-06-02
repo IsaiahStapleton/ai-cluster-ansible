@@ -39,19 +39,6 @@ spec:
   sessionAffinity: None
   type: ClusterIP
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: minio-pvc
-  labels:
-    app: minio
-spec:
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 25Gi # Adjust the size according to your needs
----
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -101,10 +88,7 @@ spec:
           name: minio-volume
       volumes:
       - name: minio-volume
-        persistentVolumeClaim:
-          claimName: minio-pvc
-      - emptyDir: {}
-        name: empty
+        emptyDir: {}
 ---
 apiVersion: batch/v1
 kind: Job
@@ -203,7 +187,7 @@ spec:
         envFrom:
         - secretRef:
             name: minio-root-user
-        image: image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/s2i-generic-data-science-notebook:2023.2
+        image: image-registry.openshift-image-registry.svc:5000/redhat-ods-applications/s2i-generic-data-science-notebook:2025.1
         imagePullPolicy: IfNotPresent
         name: create-buckets
       initContainers:
@@ -315,3 +299,45 @@ spec:
     name: minio-service
     weight: 100
   wildcardPolicy: None
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: patch-storage-config
+  labels:
+    app: minio
+spec:
+  backoffLimit: 4
+
+  template:
+    spec:
+      serviceAccountName: minio-setup
+      restartPolicy: Never
+      imagePullPolicy: IfNotPresent
+      containers:
+      - name: patch-storage-config
+        image: image-registry.openshift-image-registry.svc:5000/openshift/tools:latest
+        command:
+        - /bin/bash
+        args:
+        - -ec
+        - |
+          echo "Waiting for storage-config secret..."
+          while ! oc get secret storage-config &>/dev/null; do
+            sleep 5
+          done
+
+          echo "Labeling storage-config secret as unmanaged..."
+          oc label secret storage-config opendatahub.io/managed=false --overwrite
+
+          echo "Extracting secret key file..."
+          mkdir /tmp/extracted
+          cd /tmp/extracted
+
+          oc extract secret/storage-config
+
+          echo "Patching JSON with verify_ssl: false..."
+          jq '. + {"verify_ssl":"false"}' "aws-connection-my-storage" > modified.json
+
+          echo "Updating the secret with patched content..."
+          oc patch secret storage-config --type=merge -p "{\"data\":{\"aws-connection-my-storage\":\"$(base64 -w0 modified.json)\"}}"

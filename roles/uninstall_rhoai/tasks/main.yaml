@@ -1,0 +1,14 @@
+---
+- name: Uninstall RHOAI Operator
+  kubernetes.core.k8s:
+    state: absent
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/install-rhoai') }}"
+    validate_certs: false
+
+- name: Uninstall RHOAI Config
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/rhoai/') }}"
+    validate_certs: false
+
+
