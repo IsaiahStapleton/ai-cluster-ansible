@@ -4,4 +4,4 @@
   connection: local
   gather_facts: false
   roles:
-    - configure_cluster
+    - uninstall_managed_cluster_config
