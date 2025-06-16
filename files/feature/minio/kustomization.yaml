@@ -3,6 +3,6 @@ kind: Kustomization
 namespace: demo
 commonLabels:
   app: minio
-  
+
 resources:
   - minio-setup.yaml

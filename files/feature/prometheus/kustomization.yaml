@@ -3,4 +3,4 @@ kind: Kustomization
   
 resources:
   - cluster-monitoring-config.yaml
-  - metrics_allowlist.yaml
+  # - metrics_allowlist.yaml
