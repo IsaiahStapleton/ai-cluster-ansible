@@ -53,23 +53,23 @@
     definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/prometheus/') }}"
     validate_certs: false
 
-- name: Wait for OpenTelemetry operator to be ready
-  kubernetes.core.k8s_info:
-    namespace: opentelemetry
-    kind: Pod
-    label_selectors:
-      - app.kubernetes.io/name=opentelemetry-operator
-    wait: true
-    wait_timeout: 600
-    wait_condition:
-      type: Ready
-      status: 'True'
+# - name: Wait for OpenTelemetry operator to be ready
+#   kubernetes.core.k8s_info:
+#     namespace: opentelemetry
+#     kind: Pod
+#     label_selectors:
+#       - app.kubernetes.io/name=opentelemetry-operator
+#     wait: true
+#     wait_timeout: 600
+#     wait_condition:
+#       type: Ready
+#       status: 'True'
 
-- name: Configure OpenTelemetry
-  kubernetes.core.k8s:
-    state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/opentelemetry/') }}"
-    validate_certs: false
+# - name: Configure OpenTelemetry
+#   kubernetes.core.k8s:
+#     state: present
+#     definition: "{{ lookup('kubernetes.core.kustomize', dir='../files/feature/opentelemetry/') }}"
+#     validate_certs: false
 
 - name: Setup Grafana
   kubernetes.core.k8s:
@@ -107,24 +107,25 @@
   ansible.builtin.set_fact:
     bearer_token: "{{ grafana_token_secret.resources[0].data.token | b64decode }}"
 
-- name: Create Prometheus Datasource in Grafana
-  ansible.builtin.uri:
-    url: "https://grafana-grafana.apps.albany.nerc.mghpcc.org/api/datasources"
-    method: POST
-    headers:
-      Content-Type: application/json
-      Authorization: "Basic {{ 'admin:admin' | b64encode }}"
-    body_format: json
-    body:
-      name: Prometheus-Thanos
-      type: prometheus
-      access: proxy
-      url: https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
-      isDefault: true
-      jsonData:
-        tlsSkipVerify: true
-        httpHeaderName1: Authorization
-      secureJsonData:
-        httpHeaderValue1: "Bearer {{ bearer_token }}"
-    validate_certs: false
-  delegate_to: localhost
+# !!! Need to figure out how to dynamically change the url to current cluster
+# - name: Create Prometheus Datasource in Grafana
+#   ansible.builtin.uri:
+#     url: "https://grafana-grafana.apps.albany.nerc.mghpcc.org/api/datasources"
+#     method: POST
+#     headers:
+#       Content-Type: application/json
+#       Authorization: "Basic {{ 'admin:admin' | b64encode }}"
+#     body_format: json
+#     body:
+#       name: Prometheus-Thanos
+#       type: prometheus
+#       access: proxy
+#       url: https://thanos-querier.openshift-monitoring.svc.cluster.local:9091
+#       isDefault: true
+#       jsonData:
+#         tlsSkipVerify: true
+#         httpHeaderName1: Authorization
+#       secureJsonData:
+#         httpHeaderValue1: "Bearer {{ bearer_token }}"
+#     validate_certs: false
+#   delegate_to: localhost
