@@ -1,0 +1,12 @@
+---
+- name: Create Testing Namespace
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/testing-namespace/') }}"
+    validate_certs: false
+
+- name: Deploy Minio S3 Storage
+  kubernetes.core.k8s:
+    state: present
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/minio/') }}"
+    validate_certs: false
