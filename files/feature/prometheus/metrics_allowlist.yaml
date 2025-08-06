@@ -2,7 +2,7 @@ kind: ConfigMap
 apiVersion: v1
 metadata:
   name: observability-metrics-custom-allowlist
-  namespace: demo
+  namespace: testing
 data:
   uwl_metrics_list.yaml: |
     matches:

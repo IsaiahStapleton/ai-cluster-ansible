@@ -1,7 +1,7 @@
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
-  namespace: demo  
+  namespace: testing  
   annotations:
     opendatahub.io/recommended-accelerators: '["nvidia.com/gpu"]'
     openshift.io/display-name: vLLM NVIDIA GPU ServingRuntime for KServe

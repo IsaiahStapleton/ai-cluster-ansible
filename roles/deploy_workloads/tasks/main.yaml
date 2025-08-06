@@ -2,7 +2,7 @@
 - name: Create Demo Namespace
   kubernetes.core.k8s:
     state: present
-    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/demo-namespace/') }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir = kustomize_dir ~ '/feature/testing-namespace/') }}"
     validate_certs: false
 
 - name: Deploy Minio S3 Storage
@@ -13,7 +13,7 @@
 
 - name: Wait for Minio Jobs to Finish
   kubernetes.core.k8s_info:
-    namespace: demo
+    namespace: testing
     kind: Job
     name: create-minio-buckets
     wait: true
@@ -30,7 +30,7 @@
 
 - name: Wait for Granite Model to Finish Uploading
   kubernetes.core.k8s_info:
-    namespace: demo
+    namespace: testing
     kind: Job
     name: upload-granite-model
     wait: true

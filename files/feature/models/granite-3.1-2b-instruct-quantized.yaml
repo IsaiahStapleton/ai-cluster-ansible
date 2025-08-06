@@ -2,7 +2,7 @@ apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
   name: granite-small
-  namespace: demo  
+  namespace: testing  
   annotations:
     openshift.io/display-name: granite-small
     serving.knative.openshift.io/enablePassthrough: "true"
