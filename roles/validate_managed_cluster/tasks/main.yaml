@@ -1,0 +1,267 @@
+---
+# Validate that all operators are installed and ready
+- name: Validate RHODS Operator is installed and ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: rhods-operator
+    namespace: redhat-ods-operator
+    wait: true
+    wait_timeout: 300
+    wait_condition:
+      type: Available
+      status: 'True'
+  register: rhods_operator_status
+
+- name: Validate NFD Operator is installed and ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: nfd-controller-manager
+    namespace: openshift-nfd
+    wait: true
+    wait_timeout: 300
+    wait_condition:
+      type: Available
+      status: 'True'
+  register: nfd_operator_status
+
+- name: Validate NVIDIA GPU Operator is installed and ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: gpu-operator
+    namespace: nvidia-gpu-operator
+    wait: true
+    wait_timeout: 300
+    wait_condition:
+      type: Available
+      status: 'True'
+  register: nvidia_operator_status
+
+- name: Validate Serverless Operator is installed and ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: knative-openshift
+    namespace: openshift-serverless
+    wait: true
+    wait_timeout: 300
+    wait_condition:
+      type: Available
+      status: 'True'
+  register: serverless_operator_status
+
+- name: Validate Service Mesh Operator is installed and ready
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: istio-operator
+    namespace: openshift-operators
+    wait: true
+    wait_timeout: 300
+    wait_condition:
+      type: Available
+      status: 'True'
+  register: servicemesh_operator_status
+
+# Validate NVIDIA GPU ClusterPolicy is applied and ready
+- name: Validate NVIDIA GPU ClusterPolicy exists
+  kubernetes.core.k8s_info:
+    api_version: nvidia.com/v1
+    kind: ClusterPolicy
+    name: gpu-cluster-policy
+  register: gpu_clusterpolicy_status
+
+# - name: Validate NVIDIA GPU ClusterPolicy is ready
+#   assert:
+#     that:
+#       - gpu_clusterpolicy_status.resources | length > 0
+#       - gpu_clusterpolicy_status.resources[0].status.state == "ready"
+#     fail_msg: "NVIDIA GPU ClusterPolicy is not ready. Current state: {{ gpu_clusterpolicy_status.resources[0].status.state | default('unknown') }}"
+#     success_msg: "NVIDIA GPU ClusterPolicy is ready"
+
+# Validate NFD Instance is configured and running
+- name: Check if NFD Instance exists and is ready
+  kubernetes.core.k8s_info:
+    api_version: nfd.openshift.io/v1
+    kind: NodeFeatureDiscovery
+    name: nfd-instance
+    namespace: openshift-nfd
+  register: nfd_instance_status
+
+- name: Validate NFD Instance state
+  assert:
+    that:
+      - nfd_instance_status.resources | length > 0
+      - nfd_instance_status.resources[0].status.conditions | selectattr('type', 'equalto', 'Available') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "NFD Instance is not ready"
+    success_msg: "NFD Instance is ready"
+
+# Validate RHOAI DataScienceCluster is applied and ready
+- name: Validate DataScienceCluster exists and is ready
+  kubernetes.core.k8s_info:
+    api_version: datasciencecluster.opendatahub.io/v1
+    kind: DataScienceCluster
+    name: default-dsc
+  register: dsc_status
+
+- name: Validate DataScienceCluster exists
+  assert:
+    that:
+      - dsc_status.resources | length > 0
+    fail_msg: "DataScienceCluster 'default-dsc' not found"
+    success_msg: "DataScienceCluster 'default-dsc' exists"
+
+- name: Validate DataScienceCluster phase is Ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.phase == "Ready"
+    fail_msg: "DataScienceCluster is not ready. Current phase: {{ dsc_status.resources[0].status.phase | default('unknown') }}"
+    success_msg: "DataScienceCluster is ready"
+
+# Validate RHOAI components are installed and ready
+- name: Validate Dashboard component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'DashboardReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "Dashboard component is not ready"
+    success_msg: "Dashboard component is ready"
+
+- name: Validate Workbenches component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'WorkbenchesReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "Workbenches component is not ready"
+    success_msg: "Workbenches component is ready"
+
+- name: Validate DataSciencePipelines component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'DataSciencePipelinesReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "DataSciencePipelines component is not ready"
+    success_msg: "DataSciencePipelines component is ready"
+
+# - name: Validate Kueue component is ready 
+#   assert:
+#     that:
+#       - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'KueueReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+#     fail_msg: "Kueue component is not ready"
+#     success_msg: "Kueue component is ready"
+
+- name: Validate CodeFlare component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'CodeFlareReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "CodeFlare component is not ready"
+    success_msg: "CodeFlare component is ready"
+
+- name: Validate KServe component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'KserveReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "KServe component is not ready"
+    success_msg: "KServe component is ready"
+
+- name: Validate Ray component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'RayReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "Ray component is not ready"
+    success_msg: "Ray component is ready"
+
+- name: Validate TrustyAI component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'TrustyAIReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "TrustyAI component is not ready"
+    success_msg: "TrustyAI component is ready"
+
+- name: Validate ModelMeshServing component is ready
+  assert:
+    that:
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'ModelMeshServingReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "ModelMeshServing component is not ready"
+    success_msg: "ModelMeshServing component is ready"
+
+# Validate GPU nodes are properly labeled
+- name: Get all nodes
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Node
+  register: all_nodes
+
+- name: Get GPU nodes (nodes with nvidia.com/gpu.present label)
+  set_fact:
+    gpu_nodes: "{{ all_nodes.resources | selectattr('metadata.labels', 'defined') | selectattr('metadata.labels', 'contains', 'nvidia.com/gpu.present') | list }}"
+
+- name: Validate GPU nodes have NFD labels
+  assert:
+    that:
+      - item.metadata.labels is defined
+      - "'feature.node.kubernetes.io/pci-10de.present' in item.metadata.labels or 'feature.node.kubernetes.io/pci-0302_10de.present' in item.metadata.labels"
+    fail_msg: "GPU node {{ item.metadata.name }} is missing NFD PCI labels"
+    success_msg: "GPU node {{ item.metadata.name }} has proper NFD labels"
+  loop: "{{ gpu_nodes }}"
+  when: gpu_nodes | length > 0
+
+- name: Validate GPU nodes have NVIDIA GPU operator labels
+  assert:
+    that:
+      - item.metadata.labels is defined
+      - "'nvidia.com/gpu.present' in item.metadata.labels"
+      - "'nvidia.com/gpu.count' in item.metadata.labels"
+    fail_msg: "GPU node {{ item.metadata.name }} is missing NVIDIA GPU operator labels"
+    success_msg: "GPU node {{ item.metadata.name }} has proper NVIDIA GPU operator labels"
+  loop: "{{ gpu_nodes }}"
+  when: gpu_nodes | length > 0
+
+# Validate NFD and GPU driver pods are running on GPU nodes
+- name: Check NFD worker pods are running
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: openshift-nfd
+    label_selectors:
+      - app=nfd-worker
+    field_selectors:
+      - status.phase=Running
+  register: nfd_worker_pods
+
+- name: Validate NFD worker pods are running
+  assert:
+    that:
+      - nfd_worker_pods.resources | length > 0
+    fail_msg: "No NFD worker pods are running"
+    success_msg: "NFD worker pods are running"
+
+- name: Check NVIDIA GPU driver pods are running
+  kubernetes.core.k8s_info:
+    api_version: v1
+    kind: Pod
+    namespace: nvidia-gpu-operator
+    label_selectors:
+      - app.kubernetes.io/component=nvidia-driver
+    field_selectors:
+      - status.phase=Running
+  register: gpu_driver_pods
+
+- name: Validate NVIDIA GPU driver pods are running (if GPU nodes exist)
+  assert:
+    that:
+      - gpu_driver_pods.resources | length > 0
+    fail_msg: "No NVIDIA GPU driver pods are running"
+    success_msg: "NVIDIA GPU driver pods are running"
+  when: gpu_nodes | length > 0
+
+# Summary validation output
+- name: Display validation summary
+  debug:
+    msg:
+      - "=== Managed Cluster Validation Summary ==="
+      - "All Operators: Ready"
+      - "NVIDIA GPU ClusterPolicy: {{ gpu_clusterpolicy_status.resources[0].status.state | default('unknown') }}"
+      - "NFD Configuration: Ready"
+      - "RHOAI DataScienceCluster & Components: {{ dsc_status.resources[0].status.phase | default('unknown') }}"
+      - "GPU Nodes Found (labels applied): {{ gpu_nodes | length }}"
+      - "=== All validations passed successfully ==="
