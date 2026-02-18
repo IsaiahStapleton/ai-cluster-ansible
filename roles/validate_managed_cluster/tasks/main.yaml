@@ -208,6 +208,30 @@
   set_fact:
     gpu_nodes: "{{ all_nodes.resources | selectattr('metadata.labels', 'defined') | selectattr('metadata.labels', 'contains', 'nvidia.com/gpu.present') | list }}"
 
+- name: "GPU Validation | Build GPU Product Inventory"
+  set_fact:
+    gpu_product_counts: >-
+      {{ gpu_product_counts | default({})
+         | combine({ _product: ((gpu_product_counts | default({}))[_product] | default(0) | int) + (_count | int) }) }}
+    gpu_product_node_counts: >-
+      {{ gpu_product_node_counts | default({})
+         | combine({ _product: ((gpu_product_node_counts | default({}))[_product] | default(0) | int) + 1 }) }}
+  vars:
+    _product: "{{ item.metadata.labels['nvidia.com/gpu.product'] | default('Unknown') }}"
+    _count: "{{ item.metadata.labels['nvidia.com/gpu.count'] | default('0') | int }}"
+  loop: "{{ gpu_nodes }}"
+  loop_control:
+    label: "{{ item.metadata.name }}"
+  when: gpu_nodes | length > 0
+
+- name: "GPU Validation | Build GPU Inventory Summary Lines"
+  set_fact:
+    gpu_inventory_lines: "{{ (gpu_inventory_lines | default([])) + ['    ' ~ item.key ~ ': ' ~ item.value ~ ' GPU(s) across ' ~ (gpu_product_node_counts[item.key] | default(0)) ~ ' node(s)'] }}"
+  loop: "{{ gpu_product_counts | default({}) | dict2items | sort(attribute='key') }}"
+  loop_control:
+    label: "{{ item.key }}"
+  when: gpu_product_counts is defined and gpu_product_counts | length > 0
+
 - name: "GPU Validation | Validate NFD Labels on GPU Nodes"
   assert:
     that:
@@ -311,8 +335,8 @@
 
 # VALIDATION SUMMARY
 - name: "Summary | Display Validation Results"
-  debug:
-    msg:
+  vars:
+    summary_pre_gpu_inventory:
       - "==============================================================================="
       - "                    CLUSTER VALIDATION SUMMARY"
       - "==============================================================================="
@@ -345,9 +369,13 @@
       - "  [✓] GPU Nodes Found: {{ gpu_nodes | length }}"
       - "  [✓] NFD worker pods running: {{ nfd_worker_pods.resources | length }}"
       - "  [✓] NVIDIA driver pods running: {{ gpu_driver_pods.resources | length | default(0) }}"
+      - "  GPU Inventory:"
+    summary_post_gpu_inventory:
       - ""
       - "NETWORKING"
       - "  [✓] Service Mesh (Istio) control plane: Healthy"
       - ""
       - "MONITORING & OBSERVABILITY"
       - "  [✓] DCGM Exporter pods running: {{ dcgm_exporter_pods.resources | length | default(0) }}"
+  debug:
+    msg: "{{ summary_pre_gpu_inventory + (gpu_inventory_lines | default(['    No GPU products detected'])) + summary_post_gpu_inventory }}"
