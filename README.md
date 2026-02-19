@@ -4,12 +4,13 @@ This document provides documentation for this ansible collection. Each role is r
 
 ## Overview
 
-The project contains several roles that work together to:
-1. Deploy and configure OpenShift clusters  
+The project contains several roles that:
+1. Build and configure OpenShift clusters
 2. Install necessary operators for AI/ML workloads
 3. Deploy AI models and supporting infrastructure
 4. Set up monitoring and observability
-5. Clean up and uninstall configurations
+5. Validate AI cluster health/readiness
+6. Clean up and uninstall configurations
 
 ### Prerequisites
 
@@ -37,188 +38,71 @@ ansible-playbook playbooks/configure_managed_cluster.yaml
 
 ### 1. `build_and_configure`
 
-**Purpose**: Creates a new OpenShift cluster and configures it with all necessary operators and features for AI/ML workloads.
+**Purpose**: Creates a new OpenShift cluster and configures it with all necessary operators and features for AI/ML workloads. NOTE: This is used with the [Open Sovereign AI Cloud Solution (OSAC)](https://github.com/osac-project) 
 
-**What it does**:
-- Creates an OpenShift 4.17 cluster using the `cloudkit.templates.ocp_4_17_small` role
-- Extracts admin kubeconfig from the cluster
-- Installs all required operators (see operators section below)
-- Configures NVIDIA GPU support
-- Sets up Red Hat OpenShift AI (RHOAI)
-- Configures Node Feature Discovery (NFD)
-- Sets up Prometheus monitoring
-- Configures OpenTelemetry for observability
-
-**Key Configuration Files Used**:
-- `files/feature/operators/` - Operator installations
-- `files/feature/nvidia/` - NVIDIA GPU configuration
-- `files/feature/rhoai/` - RHOAI configuration
-- `files/feature/nfd/` - Node Feature Discovery
-- `files/feature/prometheus/` - Prometheus monitoring
-- `files/feature/opentelemetry/` - OpenTelemetry setup
 
 ### 2. `configure_managed_cluster`
 
-**Purpose**: Configures an existing managed OpenShift cluster with AI/ML capabilities. "Managed" refers to a cluster that is connected to an existing observability cluster, so there is no Grafana setup. 
-
-**What it does**:
-- Installs all required operators
-- Configures NVIDIA GPU support with cluster policy
-- Sets up RHOAI with DataScienceCluster
-- Configures NFD for hardware feature detection
-- Enables Prometheus user workload monitoring
-- Sets up OpenTelemetry collector and tracing
-
-**Difference from `build_and_configure`**: Does not create a new cluster, works with existing managed clusters.
+**Purpose**: Configures an existing managed OpenShift cluster with AI/ML capabilities. "Managed" refers to a cluster connected to an existing observability cluster, so there is no Grafana setup.
 
 ### 3. `configure_unmanaged_cluster`
 
-**Purpose**: Configures an existing unmanaged OpenShift cluster with full AI/ML stack including additional observability tools.
-
-**What it does**:
-- Everything that `configure_managed_cluster` does, plus:
-- Sets up Grafana for visualization
-- Configures Grafana with Prometheus datasource
-- Creates Grafana-Prometheus service account and token
-- Automatically configures Grafana datasource to connect to Thanos Querier
-
-**Additional Features**:
-- Full observability stack with Grafana dashboards
+**Purpose**: Configures an existing unmanaged OpenShift cluster with the full AI/ML stack including additional observability tools. This role does everything that `configure_managed_cluster` does, plus:
+- Sets up Grafana for metrics visualization
+- Configures Grafana with a Prometheus datasource connected to Thanos Querier
 
 
-### 4. `deploy_workloads`
+### 4. `validate_managed_cluster`
+
+**Purpose**: Validates the health and readiness of a managed AI cluster after configuration.
+
+**What it checks**:
+- **Operator Health**: Verifies RHOAI, NFD, NVIDIA GPU, OpenShift Serverless, and Service Mesh operators are all available
+- **Core Configurations**: Validates GPU ClusterPolicy, NFD Instance, and DataScienceCluster are in a ready state
+- **DataScienceCluster Components**: Confirms all DSC components are ready: Dashboard, Workbenches, Data Science Pipelines, CodeFlare, KServe, Ray, TrustyAI, ModelMesh Serving, Kueue, and ModelRegistry
+- **GPU Validation**: Checks GPU node labels (NFD and NVIDIA), NFD worker pods, and NVIDIA driver pods are running
+- **Networking**: Validates the Service Mesh (Istio) control plane is healthy
+- **Monitoring**: Confirms DCGM Exporter pods are running for GPU metrics
+
+At the end of the run, a summary of all validation results is printed.
+
+### 5. `deploy_workloads`
 
 **Purpose**: Deploys AI/ML workloads and supporting infrastructure.
 
 **What it deploys**:
-
-#### Infrastructure:
 - **Demo Namespace**: Creates a dedicated namespace for demo workloads
-- **MinIO S3 Storage**: 
-  - Deploys MinIO server with 25GB storage
-  - Creates S3 buckets for model storage
-  - Sets up data science connections for RHOAI integration
-  - Configures service accounts and RBAC
-
-#### AI Models:
-- **Granite 3.1 2B Instruct Model**:
-  - Quantized version (w4a16) for efficient inference
-  - Deployed as KServe InferenceService
-  - Uses vLLM runtime for high-performance serving
-  - Configured with GPU resources (1 GPU, 4-8GB memory)
-  - Includes proper tolerations for GPU scheduling
-
-#### Model Management:
-- **Model Upload Job**: Uploads the Granite model to MinIO storage
+- **MinIO S3 Storage**: Deploys MinIO storage, creates S3 buckets, and sets up data science connections for RHOAI
+- **Granite 3.1 2B Instruct Model**: Quantized (w4a16), deployed as a KServe InferenceService using the vLLM runtime
 - **vLLM ServingRuntime**: Custom serving runtime for LLM inference
+- **Model Upload Job**: Uploads the Granite model to MinIO S3 bucket
+- **LLM Load Test Exporter**: Custom metrics exporter with ServiceMonitor for Prometheus integration
 
-#### Monitoring:
-- **LLM Load Test Exporter**: 
-  - Custom metrics exporter for LLM performance monitoring
-  - Includes ServiceMonitor for Prometheus integration
-  - Provides load testing capabilities for deployed models
+### 6. `uninstall_managed_cluster_config`
 
-### 5. `uninstall_managed_cluster_config`
+**Purpose**: Removes everything installed and configured in the cluster from the `configure_managed_cluster` role.
 
-**Purpose**: Removes AI/ML configurations from a managed cluster.
+### 7. `uninstall_unmanaged_cluster_config`
 
-**What it removes**:
-- RHOAI DataScienceCluster and related CRDs
-- NFD instances
-- All installed operators
-- ServiceMesh and Authorino ClusterServiceVersions
-- Kueue CRDs (multikueue resources)
-- Prometheus user workload monitoring configuration
+**Purpose**: Removes everything installed and configured in the cluster from the `configure_unmanaged_cluster` role.
 
+### 8. `uninstall_workloads`
 
-### 6. `uninstall_unmanaged_cluster_config`
-
-**Purpose**: Removes AI/ML configurations from an unmanaged cluster, including observability tools.
-
-**What it removes**:
-- Everything that `uninstall_managed_cluster_config` removes, plus:
-- Grafana setup and configuration
-- Grafana observability configurations
-- Additional unmanaged cluster specific resources
-
-### 7. `uninstall_workloads`
-
-**Purpose**: Removes all deployed AI/ML workloads and supporting infrastructure.
-
-**Cleanup Process**:
-1. **Model Cleanup**:
-   - Removes finalizers from InferenceServices to allow deletion
-   - Deletes all InferenceServices (AI models)
-   - Removes all ServingRuntimes
-
-2. **Infrastructure Cleanup**:
-   - Removes MinIO S3 storage deployment
-   - Removes LLM load test exporter
-   - Cleans up all MinIO jobs and pods using shell commands
-
-
+**Purpose**: Removes everything deployed from the `deploy_workloads` role.
 
 ## Installed Operators
 
 The following operators are installed by the configuration roles:
 
-- **Red Hat OpenShift AI (RHOAI)** (`rhods-operator`):
-  - Channel: `stable`
-  - Source: `redhat-operators`
-  - Enables: Jupyter notebooks, model serving, pipelines, distributed training
-
-- **NVIDIA GPU Operator** (`gpu-operator-certified`):
-  - Source: `certified-operators`
-  - Enables: GPU acceleration, device plugins, monitoring
-
-- **Node Feature Discovery (NFD)** (`nfd`):
-  - Channel: `stable`
-  - Source: `redhat-operators`
-  - Enables: Hardware feature detection and labeling
-
-- **OpenShift Serverless** (`serverless-operator`):
-  - Channel: `stable`
-  - Source: `redhat-operators`
-  - Enables: Knative Serving for model inference
-
-- **Service Mesh** (`servicemesh-operator`):
-  - Provides: Istio service mesh capabilities
-
-- **Authorino** (`authorino-operator`):
-  - Provides: API security and authorization
-
-- **OpenTelemetry** (`opentelemetry-product`):
-  - Channel: `stable`
-  - Source: `redhat-operators`
-  - Enables: Distributed tracing and observability
-
-- **Autopilot**:
-  - Provides: Provides health checks for your AI cluster.
-
-## Key Configurations
-
-### RHOAI DataScienceCluster Components:
-- **Enabled**: CodeFlare, KServe, TrustyAI, Ray, Kueue, Workbenches, Dashboard, ModelMesh Serving, Data Science Pipelines
-- **KServe Configuration**: Uses OpenShift default ingress certificates
-
-### NVIDIA GPU Configuration:
-- **Driver**: Enabled with auto-upgrade policy
-- **DCGM Exporter**: Enabled with ServiceMonitor for Prometheus
-- **Device Plugin**: Enabled with MPS support
-- **GPU Feature Discovery**: Enabled
-- **MIG Manager**: Enabled for multi-instance GPU support
-
-### Monitoring Stack:
-- **Prometheus**: User workload monitoring enabled
-- **OpenTelemetry**: Collector configured for traces and metrics
-- **Grafana** (unmanaged clusters): Integrated with Prometheus/Thanos
-- **Custom Metrics**: LLM load test exporter for model performance
-
-### Storage Configuration:
-- **MinIO**: S3-compatible storage for model artifacts
-- **Data Science Connections**: Automated setup for RHOAI integration
-- **Persistent Storage**: 25GB PVC for MinIO data
+- **Red Hat OpenShift AI (RHOAI)**: Enables model serving (KServe, ModelMesh Serving), Jupyter notebooks (Workbenches), pipelines, model registry, distributed training (Ray, CodeFlare), workload scheduling (Kueue), and AI explainability (TrustyAI)
+- **NVIDIA GPU Operator**: Enables GPU acceleration, node labeling, and GPU monitoring
+- **Node Feature Discovery (NFD)**: Hardware feature detection and node labeling
+- **OpenShift Serverless**: Used for serverless model deployments
+- **Service Mesh**: Istio service mesh capabilities
+- **Authorino**: Model endpoint security and authorization
+- **OpenTelemetry**: Distributed tracing and observability
+- **Autopilot**: Health checks for the AI cluster
 
 ## Variable
 
-All roles use the variable `kustomize_dir` which points to the `files` directory containing all Kubernetes manifests. 
+All roles use the variable `kustomize_dir` which points to the `files` directory containing all Kubernetes manifests.
