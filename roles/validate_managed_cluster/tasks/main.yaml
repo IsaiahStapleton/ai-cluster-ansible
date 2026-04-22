@@ -54,19 +54,6 @@
       status: 'True'
   register: serverless_operator_status
 
-- name: "Operator Health | OpenShift Service Mesh Operator"
-  kubernetes.core.k8s_info:
-    api_version: apps/v1
-    kind: Deployment
-    name: istio-operator
-    namespace: openshift-operators
-    wait: true
-    wait_timeout: 300
-    wait_condition:
-      type: Available
-      status: 'True'
-  register: servicemesh_operator_status
-
 
 # CONFIGURATION & COMPONENT READINESS - Core Configurations
 # All configurations must be in a Ready state
@@ -103,7 +90,7 @@
 
 - name: "Core Config | Fetch DataScienceCluster"
   kubernetes.core.k8s_info:
-    api_version: datasciencecluster.opendatahub.io/v1
+    api_version: datasciencecluster.opendatahub.io/v2
     kind: DataScienceCluster
     name: default-dsc
   register: dsc_status
@@ -139,19 +126,12 @@
     fail_msg: "Workbenches component is not ready (WorkbenchesReady != True)"
     success_msg: "Workbenches component is ready (WorkbenchesReady = True)"
 
-- name: "DSC Component | Validate Data Science Pipelines Ready"
+- name: "DSC Component | Validate AI Pipelines Ready"
   assert:
     that:
-      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'DataSciencePipelinesReady') | selectattr('status', 'equalto', 'True') | list | length > 0
-    fail_msg: "Data Science Pipelines component is not ready (DataSciencePipelinesReady != True)"
-    success_msg: "Data Science Pipelines component is ready (DataSciencePipelinesReady = True)"
-
-- name: "DSC Component | Validate CodeFlare Ready"
-  assert:
-    that:
-      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'CodeFlareReady') | selectattr('status', 'equalto', 'True') | list | length > 0
-    fail_msg: "CodeFlare component is not ready (CodeFlareReady != True)"
-    success_msg: "CodeFlare component is ready (CodeFlareReady = True)"
+      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'AIPipelinesReady') | selectattr('status', 'equalto', 'True') | list | length > 0
+    fail_msg: "AI Pipelines component is not ready (AIPipelinesReady != True)"
+    success_msg: "AI Pipelines component is ready (AIPipelinesReady = True)"
 
 - name: "DSC Component | Validate KServe Ready"
   assert:
@@ -173,20 +153,6 @@
       - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'TrustyAIReady') | selectattr('status', 'equalto', 'True') | list | length > 0
     fail_msg: "TrustyAI component is not ready (TrustyAIReady != True)"
     success_msg: "TrustyAI component is ready (TrustyAIReady = True)"
-
-- name: "DSC Component | Validate ModelMesh Serving Ready"
-  assert:
-    that:
-      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'ModelMeshServingReady') | selectattr('status', 'equalto', 'True') | list | length > 0
-    fail_msg: "ModelMesh Serving component is not ready (ModelMeshServingReady != True)"
-    success_msg: "ModelMesh Serving component is ready (ModelMeshServingReady = True)"
-
-- name: "DSC Component | Validate Kueue Ready"
-  assert:
-    that:
-      - dsc_status.resources[0].status.conditions | selectattr('type', 'equalto', 'KueueReady') | selectattr('status', 'equalto', 'True') | list | length > 0
-    fail_msg: "Kueue component is not ready (KueueReady != True)"
-    success_msg: "Kueue component is ready (KueueReady = True)"
 
 - name: "DSC Component | Validate ModelRegistry Ready"
   assert:
@@ -294,24 +260,6 @@
   when: gpu_nodes | length > 0
 
 
-# NETWORKING
-# Service Mesh (Istio) control plane must be healthy
-- name: "Networking | Fetch ServiceMeshControlPlane"
-  kubernetes.core.k8s_info:
-    api_version: maistra.io/v2
-    kind: ServiceMeshControlPlane
-    namespace: istio-system
-  register: smcp_status
-
-- name: "Networking | Validate Service Mesh Control Plane Healthy"
-  assert:
-    that:
-      - smcp_status.resources | length > 0
-      - smcp_status.resources[0].status.conditions | selectattr('type', 'equalto', 'Ready') | selectattr('status', 'equalto', 'True') | list | length > 0
-    fail_msg: "Service Mesh control plane is not healthy (Ready != True)"
-    success_msg: "Service Mesh (Istio) control plane is healthy (Ready = True)"
-
-
 # MONITORING & OBSERVABILITY
 # GPU metrics available via DCGM exporter
 - name: "Monitoring | Fetch DCGM Exporter Pods"
@@ -346,7 +294,6 @@
       - "  [✓] Node Feature Discovery"
       - "  [✓] NVIDIA GPU Operator"
       - "  [✓] OpenShift Serverless"
-      - "  [✓] OpenShift Service Mesh"
       - ""
       - "CORE CONFIGURATIONS"
       - "  [✓] DataScienceCluster: {{ dsc_status.resources[0].status.phase | default('unknown') }}"
@@ -356,13 +303,10 @@
       - "DATASCIENCECLUSTER COMPONENTS"
       - "  [✓] Dashboard"
       - "  [✓] Workbenches"
-      - "  [✓] Data Science Pipelines"
-      - "  [✓] CodeFlare"
+      - "  [✓] AI Pipelines"
       - "  [✓] KServe"
       - "  [✓] Ray"
       - "  [✓] TrustyAI"
-      - "  [✓] ModelMesh Serving"
-      - "  [✓] Kueue"
       - "  [✓] ModelRegistry"
       - ""
       - "GPU VALIDATION"
@@ -371,9 +315,6 @@
       - "  [✓] NVIDIA driver pods running: {{ gpu_driver_pods.resources | length | default(0) }}"
       - "  GPU Inventory:"
     summary_post_gpu_inventory:
-      - ""
-      - "NETWORKING"
-      - "  [✓] Service Mesh (Istio) control plane: Healthy"
       - ""
       - "MONITORING & OBSERVABILITY"
       - "  [✓] DCGM Exporter pods running: {{ dcgm_exporter_pods.resources | length | default(0) }}"
