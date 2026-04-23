@@ -54,6 +54,19 @@
       status: 'True'
   register: serverless_operator_status
 
+- name: "Operator Health | Authorino Operator"
+  kubernetes.core.k8s_info:
+    api_version: apps/v1
+    kind: Deployment
+    name: authorino-operator
+    namespace: openshift-operators
+    wait: true
+    wait_timeout: 300
+    wait_condition:
+      type: Available
+      status: 'True'
+  register: authorino_operator_status
+
 
 # CONFIGURATION & COMPONENT READINESS - Core Configurations
 # All configurations must be in a Ready state
@@ -294,6 +307,7 @@
       - "  [✓] Node Feature Discovery"
       - "  [✓] NVIDIA GPU Operator"
       - "  [✓] OpenShift Serverless"
+      - "  [✓] Authorino"
       - ""
       - "CORE CONFIGURATIONS"
       - "  [✓] DataScienceCluster: {{ dsc_status.resources[0].status.phase | default('unknown') }}"
